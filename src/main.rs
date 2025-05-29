@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use clap::Parser;
 use console::Term;
 
-// mod animation;
+mod animation;
 // mod inventory;
 
 #[derive(Debug, Parser)]
@@ -37,7 +37,6 @@ fn run() -> anyhow::Result<()> {
     }
 
     // inventory = new()
-    
 
     Ok(())
 }
