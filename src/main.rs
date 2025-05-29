@@ -3,9 +3,10 @@ use std::process::exit;
 use anyhow::anyhow;
 use clap::Parser;
 use console::Term;
+use inventory::Inventory;
 
 mod animation;
-// mod inventory;
+mod inventory;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -36,7 +37,7 @@ fn run() -> anyhow::Result<()> {
         return Err(anyhow!("Should be run in a terminal."));
     }
 
-    // inventory = new()
+    let mut inventory = Inventory::new();
 
     Ok(())
 }
