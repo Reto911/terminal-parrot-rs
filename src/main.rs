@@ -1,12 +1,27 @@
 use std::{process::exit, sync::mpsc, thread, time::Duration};
 
 use anyhow::anyhow;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use console::{Key, Term};
 use inventory::Inventory;
 
 mod animation;
 mod inventory;
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum Orientation {
+    Regular,
+    Aussie,
+}
+
+impl ToString for Orientation {
+    fn to_string(&self) -> String {
+        match self {
+            Orientation::Regular => "regular".to_owned(),
+            Orientation::Aussie => "aussie".to_owned(),
+        }
+    }
+}
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -21,9 +36,8 @@ struct Args {
     /// frame delay in ms
     #[arg(long, default_value_t = 75)]
     delay: u64,
-    /// regular or aussie
-    #[arg(long, default_value = "regular")]
-    orientation: String,
+    #[arg(long, default_value_t = Orientation::Regular)]
+    orientation: Orientation,
     /// list available animations and exit
     #[arg(long, short, default_value_t = false)]
     list: bool,
