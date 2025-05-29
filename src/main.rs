@@ -1,24 +1,33 @@
-use std::{process::exit, sync::mpsc, thread, time::Duration};
+use std::{
+    fmt::Display,
+    process::exit,
+    sync::mpsc::{self, RecvTimeoutError},
+    thread,
+    time::Duration,
+};
 
 use anyhow::anyhow;
 use clap::{Parser, ValueEnum};
 use console::{Key, Term};
+use draw::Draw;
 use inventory::Inventory;
 
 mod animation;
+mod colors;
+mod draw;
 mod inventory;
 
-#[derive(Debug, Clone, Copy, ValueEnum)]
+#[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq)]
 enum Orientation {
     Regular,
     Aussie,
 }
 
-impl ToString for Orientation {
-    fn to_string(&self) -> String {
+impl Display for Orientation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Orientation::Regular => "regular".to_owned(),
-            Orientation::Aussie => "aussie".to_owned(),
+            Orientation::Regular => write!(f, "regular"),
+            Orientation::Aussie => write!(f, "aussie"),
         }
     }
 }
@@ -85,25 +94,37 @@ fn run() -> anyhow::Result<()> {
     let _event_listener = thread::spawn(move || {
         loop {
             let key = term_clone.read_key();
-            if let Ok(k) = key {
-                if k != Key::Unknown && event_tx.send(k).is_err() {
-                    break;
-                }
+            if let Ok(k) = key
+                && k != Key::Unknown
+                && event_tx.send(k).is_err()
+            {
+                break;
             }
         }
     });
 
     let timeout = Duration::from_millis(args.delay);
-    for _ in 0..args.loops * n_frames {
-        // TODO: draw
+    let mut draw = Draw::new(term, animation, args.orientation);
 
-        let Ok(key) = event_rx.recv_timeout(timeout) else {
-            eprintln!("Event listener closed.");
+    let mut loop_idx = 0;
+    loop {
+        if args.loops > 0 && loop_idx >= args.loops * n_frames {
             break;
-        };
+        }
 
-        if key == Key::Escape || key == Key::CtrlC || key == Key::Char('q') {
-            break;
+        draw.draw()?;
+        loop_idx += 1;
+        match event_rx.recv_timeout(timeout) {
+            Ok(key) => {
+                if key == Key::Escape || key == Key::CtrlC || key == Key::Char('q') {
+                    break;
+                }
+            }
+            Err(RecvTimeoutError::Disconnected) => {
+                eprintln!("Event listener closed.");
+                break;
+            }
+            _ => {}
         }
     }
 
