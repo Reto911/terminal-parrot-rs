@@ -53,6 +53,7 @@ fn run() -> anyhow::Result<()> {
             animation.metadata.iter().for_each(|(k, v)| {
                 println!("{k}: {v}");
             });
+            println!();
         }
         exit(0);
     }
@@ -71,10 +72,8 @@ fn run() -> anyhow::Result<()> {
         loop {
             let key = term_clone.read_key();
             if let Ok(k) = key {
-                if k != Key::Unknown {
-                    if event_tx.send(k).is_err() {
-                        break;
-                    }
+                if k != Key::Unknown && event_tx.send(k).is_err() {
+                    break;
                 }
             }
         }
